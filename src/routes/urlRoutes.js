@@ -4,9 +4,9 @@ const urlController = require('../controllers/urlController');
 const { createLimiter } = require('../middleware/rateLimiter');
 
 // Rate limiting for create endpoint
-const createLimiter = createLimiter(60 * 1000, 20); // 20 per minute
+const reqLimiter = createLimiter(60 * 1000, 20); // 20 per minute
 
-router.post('/api/urls', createLimiter, urlController.createShortUrl);
+router.post('/api/urls', reqLimiter, urlController.createShortUrl);
 router.get('/:code', urlController.redirectToUrl);
 router.get('/api/urls/:code/analytics', urlController.getAnalytics);
 
