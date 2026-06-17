@@ -1,0 +1,64 @@
+const urlService = require('../services/urlService');
+const { isValidUrl } = require('../middleware/validator');
+
+exports.createShortUrl = async (req, res, next) => {
+  try {
+    const { originalUrl, expiresInDays } = req.body;
+    if (!originalUrl || !isValidUrl(originalUrl)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid URL provided'
+      });
+    }
+
+    const result = await urlService.createShortUrl(originalUrl, expiresInDays || 30);
+    res.status(201).json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.redirectToUrl = async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const originalUrl = await urlService.getOriginalUrl(code);
+    if (!originalUrl) {
+      return res.status(404).json({
+        success: false,
+        message: 'Short URL not found or expired'
+      });
+    }
+
+    // Record click asynchronously (don't block redirect)
+    const referrer = req.headers.referer || '';
+    const userAgent = req.headers['user-agent'] || '';
+    const ip = req.ip || req.connection.remoteAddress;
+    urlService.recordClick(code, referrer, userAgent, ip).catch(console.error);
+
+    res.redirect(301, originalUrl);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAnalytics = async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const analytics = await urlService.getAnalytics(code);
+    if (!analytics) {
+      return res.status(404).json({
+        success: false,
+        message: 'Short URL not found'
+      });
+    }
+    res.json({
+      success: true,
+      ...analytics
+    });
+  } catch (error) {
+    next(error);
+  }
+};
