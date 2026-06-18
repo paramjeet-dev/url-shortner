@@ -1,5 +1,6 @@
 const urlService = require('../services/urlService');
 const { isValidUrl } = require('../middleware/validator');
+const { addClickJob } = require('../queues/clickQueue');
 
 exports.createShortUrl = async (req, res, next) => {
   try {
@@ -36,11 +37,11 @@ exports.redirectToUrl = async (req, res, next) => {
       });
     }
 
-    // Record click asynchronously (don't block redirect)
+    // Enqueue click event
     const referrer = req.headers.referer || '';
     const userAgent = req.headers['user-agent'] || '';
     const ip = req.ip || req.connection.remoteAddress;
-    urlService.recordClick(code, referrer, userAgent, ip).catch(console.error);
+    addClickJob(code, referrer, userAgent, ip).catch(console.error);
 
     res.redirect(301, originalUrl);
   } catch (error) {

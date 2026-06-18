@@ -45,22 +45,26 @@ const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = nul
 
 const getOriginalUrl = async (shortCode) => {
   const cacheKey = `shorturl:${shortCode}`;
-  // 1. Check cache
-  const cached = await redisClient.get(cacheKey);
-  if (cached) {
-    return cached;
+  try {
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+  } catch (err) {
+    console.error('Redis read error, falling back to DB:', err.message);
   }
 
-  // 2. Check DB
   const urlDoc = await Url.findOne({ shortCode });
-  if (!urlDoc) {
-    return null;
-  }
+  if (!urlDoc) return null;
 
-  // 3. Cache it
-  const ttl = Math.floor((urlDoc.expiresAt - Date.now()) / 1000);
-  if (ttl > 0) {
-    await redisClient.setEx(cacheKey, ttl, urlDoc.originalUrl);
+  // Attempt to cache again (ignore errors)
+  try {
+    const ttl = Math.floor((urlDoc.expiresAt - Date.now()) / 1000);
+    if (ttl > 0) {
+      await redisClient.setEx(cacheKey, ttl, urlDoc.originalUrl);
+    }
+  } catch (err) {
+    console.error('Redis write error, continuing:', err.message);
   }
 
   return urlDoc.originalUrl;
