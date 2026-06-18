@@ -1,10 +1,23 @@
 const Url = require('../models/Url');
-const { generateUniqueCode } = require('../utils/shortCode');
+const { generateUniqueCode, isAliasAvailable, validateAlias } = require('../utils/shortCode');
 const redisClient = require('../config/redis');
 
-const createShortUrl = async (originalUrl, expiresInDays = 30) => {
-  // Validate URL
-  const shortCode = await generateUniqueCode();
+const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = null) => {
+  let shortCode;
+
+  if (customAlias) {
+    if (!validateAlias(customAlias)) {
+      throw new Error('Invalid alias format. Use 4-20 alphanumeric, underscore, or hyphen.');
+    }
+    const available = await isAliasAvailable(customAlias);
+    if (!available) {
+      throw new Error('Alias already taken.');
+    }
+    shortCode = customAlias;
+  } else {
+    shortCode = await generateUniqueCode();
+  }
+
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
@@ -16,7 +29,7 @@ const createShortUrl = async (originalUrl, expiresInDays = 30) => {
 
   await urlDoc.save();
 
-  // Cache the new URL immediately
+  // Cache it
   await redisClient.setEx(
     `shorturl:${shortCode}`,
     expiresInDays * 24 * 60 * 60,

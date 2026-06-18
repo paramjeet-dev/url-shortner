@@ -21,4 +21,16 @@ const generateUniqueCode = async (length = 6) => {
   return code;
 };
 
-module.exports = { generateUniqueCode };
+// Check if a given alias is available
+const isAliasAvailable = async (alias) => {
+  const existing = await Url.findOne({ shortCode: alias });
+  return !existing;
+};
+
+const validateAlias = (alias) => {
+  // Only alphanumeric + underscore + hyphen, length 4-20
+  const regex = /^[a-zA-Z0-9_-]{4,20}$/;
+  return regex.test(alias);
+};
+
+module.exports = { generateUniqueCode, isAliasAvailable, validateAlias };

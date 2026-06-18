@@ -3,7 +3,7 @@ const { isValidUrl } = require('../middleware/validator');
 
 exports.createShortUrl = async (req, res, next) => {
   try {
-    const { originalUrl, expiresInDays } = req.body;
+    const { originalUrl, expiresInDays, customAlias } = req.body;
     if (!originalUrl || !isValidUrl(originalUrl)) {
       return res.status(400).json({
         success: false,
@@ -11,12 +11,16 @@ exports.createShortUrl = async (req, res, next) => {
       });
     }
 
-    const result = await urlService.createShortUrl(originalUrl, expiresInDays || 30);
+    const result = await urlService.createShortUrl(originalUrl, expiresInDays || 30, customAlias);
     res.status(201).json({
       success: true,
       ...result
     });
   } catch (error) {
+    // Distinguish custom alias errors
+    if (error.message.includes('alias')) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
     next(error);
   }
 };
