@@ -6,7 +6,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const user = JSON.parse(localStorage.getItem('pckd_user') || 'null');
   if (user?.token) {
     config.headers.Authorization = `Bearer ${user.token}`;
   }
@@ -17,5 +17,7 @@ export const shortenUrl = (data) => api.post('/urls', data);
 export const getAnalytics = (code) => api.get(`/urls/${code}/analytics`);
 export const loginUser = (credentials) => api.post('/auth/login', credentials);
 export const signupUser = (userData) => api.post('/auth/signup', userData);
+export const getUserLinks = () => api.get('/urls'); // expects array of user's links
+export const deleteLink = (code) => api.delete(`/urls/${code}`);
 
 export default api;
