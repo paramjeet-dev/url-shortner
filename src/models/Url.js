@@ -32,7 +32,13 @@ const urlSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  clickEvents: [clickEventSchema]
+  clickEvents: [clickEventSchema],
+  userId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'User',
+  required: true,
+  index: true,
+},
 });
 
 // TTL index: automatically remove documents after expiresAt
