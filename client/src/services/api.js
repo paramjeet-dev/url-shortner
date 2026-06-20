@@ -78,5 +78,8 @@ export const getUserLinks = () => api.get('/urls'); // expects array of user's l
 export const deleteLink = (code) => api.delete(`/urls/${code}`);
 export const updateLinkTitle = (code, title) => api.put(`/urls/${code}/title`, { title });
 export const extendLinkExpiry = (code, days) => api.post(`/urls/${code}/extend`, { days });
-
+export const getQRCode = (code) =>
+  api.get(`/urls/${code}/qr`, {
+    responseType: 'blob',
+  });
 export default api;

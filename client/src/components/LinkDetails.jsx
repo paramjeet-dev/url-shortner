@@ -1,19 +1,30 @@
 import { useState } from 'react';
-import { Calendar, Eye, Edit, Trash2, Link as LinkIcon, Clock, Check, X } from 'lucide-react';
+import { Calendar, Eye, Edit, Trash2, Link as LinkIcon, Clock, Check, X, QRCode } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { updateLinkTitle, extendLinkExpiry } from '../services/api'; // need to add these functions
+import { updateLinkTitle, extendLinkExpiry } from '../services/api';
+import QRModal from './QRModal';
 
 const LinkDetails = ({ link, onDelete, onUpdate }) => {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(link.title || '');
   const [deleting, setDeleting] = useState(false);
   const [extending, setExtending] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+
+  const handleQR = () => setShowQR(true);
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this link?')) return;
-    setDeleting(true);
-    await onDelete(link.shortCode);
-    setDeleting(false);
+    if (!window.confirm('Are you sure you want to delete this link?')) return;
+
+    try {
+      setDeleting(true);
+      await onDelete(link.shortCode);
+      toast.success('Link deleted');
+    } catch (err) {
+      toast.error('Failed to delete link');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleSaveTitle = async () => {
@@ -137,7 +148,7 @@ const LinkDetails = ({ link, onDelete, onUpdate }) => {
         </div>
       </div>
 
-      {/* Metadata counts – mimic design */}
+      {/* Metadata counts*/}
       <div className="border-t border-gray-100 pt-3 mt-2">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Details</p>
         <div className="flex flex-wrap gap-2 mt-2">
@@ -149,6 +160,15 @@ const LinkDetails = ({ link, onDelete, onUpdate }) => {
             )
           ))}
         </div>
+      </div>
+      <div className="border-t border-gray-100 pt-3 mt-3">
+        <button
+          onClick={handleQR}
+          className="flex items-center gap-2 text-gray-600 hover:text-blue-600"
+        >
+          <QRCode size={18} />
+          <span className="text-sm">Show QR Code</span>
+        </button>
       </div>
     </div>
   );

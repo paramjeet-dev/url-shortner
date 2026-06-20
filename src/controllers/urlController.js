@@ -4,7 +4,7 @@ const { addClickJob } = require('../queues/clickQueue');
 
 exports.createShortUrl = async (req, res, next) => {
   try {
-    const { originalUrl, expiresInDays, customAlias, password, customDomain } = req.body;
+    const { originalUrl, expiresInDays, customAlias, password } = req.body;
     if (!originalUrl || !isValidUrl(originalUrl)) {
       return res.status(400).json({ success: false, message: 'Invalid URL provided' });
     }
@@ -14,8 +14,7 @@ exports.createShortUrl = async (req, res, next) => {
       expiresInDays || 30,
       customAlias,
       req.user._id,
-      password,
-      customDomain
+      password
     );
     res.status(201).json({ success: true, ...result });
   } catch (error) {
@@ -30,21 +29,53 @@ exports.createShortUrl = async (req, res, next) => {
 exports.redirectToUrl = async (req, res, next) => {
   try {
     const { code } = req.params;
-    const originalUrl = await urlService.getOriginalUrl(code);
-    if (!originalUrl) {
+    const token = req.query.pwd_token;
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (decoded.shortCode === code) {
+          const urlData = await urlService.getOriginalUrl(
+            code,
+            domain,
+            true
+          );
+
+          if (urlData && !urlData.requiresPassword) {
+            return res.redirect(301, urlData.originalUrl);
+          }
+        }
+      } catch (err) {
+        // Invalid/expired token; continue normal flow
+      }
+    }
+
+    const urlData = await urlService.getOriginalUrl(code);
+
+    if (!urlData) {
       return res.status(404).json({
         success: false,
-        message: 'Short URL not found or expired'
+        message: 'Short URL not found or expired',
       });
     }
 
-    // Enqueue click event
+    if (urlData.requiresPassword) {
+      return res.status(403).json({
+        success: false,
+        message: 'Password required',
+        requiresPassword: true,
+        shortCode: code,
+      });
+    }
+
     const referrer = req.headers.referer || '';
     const userAgent = req.headers['user-agent'] || '';
     const ip = req.ip || req.connection.remoteAddress;
+
     addClickJob(code, referrer, userAgent, ip).catch(console.error);
 
-    res.redirect(301, originalUrl);
+    return res.redirect(301, urlData.originalUrl);
   } catch (error) {
     next(error);
   }
@@ -125,8 +156,7 @@ exports.verifyPassword = async (req, res, next) => {
   try {
     const { code } = req.params;
     const { password } = req.body;
-    const host = req.get('host');
-    const token = await urlService.verifyPassword(code, password, host);
+    const token = await urlService.verifyPassword(code, password);
     res.json({ success: true, token });
   } catch (error) {
     const status = error.message.includes('not found') ? 404 : 403;
@@ -137,8 +167,9 @@ exports.verifyPassword = async (req, res, next) => {
 exports.generateQR = async (req, res, next) => {
   try {
     const { code } = req.params;
-    const host = req.get('host');
-    const qrBuffer = await urlService.generateQRCode(code, host);
+
+    const qrBuffer = await urlService.generateQRCode(code);
+
     res.set('Content-Type', 'image/png');
     res.send(qrBuffer);
   } catch (error) {

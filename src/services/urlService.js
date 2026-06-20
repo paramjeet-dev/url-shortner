@@ -4,7 +4,7 @@ const Url = require('../models/Url');
 const { generateUniqueCode, isAliasAvailable, validateAlias } = require('../utils/shortCode');
 const redisClient = require('../config/redis');
 
-const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = null, userId, password = null, customDomain = null) => {
+const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = null, userId, password = null) => {
   let shortCode;
 
   if (customAlias) {
@@ -33,8 +33,7 @@ const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = nul
     shortCode,
     expiresAt,
     userId,
-    password: hashedPassword,
-    customDomain: customDomain || null,
+    password: hashedPassword
   });
 
   await urlDoc.save();
@@ -83,8 +82,8 @@ const deleteUrl = async (shortCode, userId) => {
   return result;
 };
 
-const getOriginalUrl = async (shortCode, domain = null) => {
-  const cacheKey = `shorturl:${shortCode}${domain ? `:${domain}` : ''}`;
+const getOriginalUrl = async (shortCode) => {
+  const cacheKey = `shorturl:${shortCode}`;
   try {
     const cached = await redisClient.get(cacheKey);
     if (cached) {
@@ -95,7 +94,9 @@ const getOriginalUrl = async (shortCode, domain = null) => {
       }
       return { originalUrl: parsed.originalUrl };
     }
-  } catch (_) { }
+  } catch (err) {
+    console.error('Error fetching from Redis:', err);
+  }
 
   const query = { shortCode };
   if (domain) {
@@ -128,9 +129,8 @@ const getOriginalUrl = async (shortCode, domain = null) => {
   return { originalUrl: urlDoc.originalUrl };
 };
 
-const verifyPassword = async (shortCode, password, domain = null) => {
+const verifyPassword = async (shortCode, password) => {
   const query = { shortCode };
-  if (domain) query.customDomain = domain;
   const urlDoc = await Url.findOne(query).select('+password');
   if (!urlDoc) throw new Error('Link not found');
   if (!urlDoc.password) throw new Error('This link is not password protected');
@@ -147,10 +147,13 @@ const verifyPassword = async (shortCode, password, domain = null) => {
   return token;
 };
 
-const generateQRCode = async (shortCode, domain = null) => {
-  const baseUrl = domain ? `https://${domain}` : process.env.BASE_URL;
-  const fullUrl = `${baseUrl}/${shortCode}`;
-  const qrBuffer = await QRCode.toBuffer(fullUrl, { type: 'png', margin: 1 });
+const generateQRCode = async (shortCode) => {
+  const fullUrl = `${process.env.BASE_URL}/${shortCode}`;
+  const qrBuffer = await QRCode.toBuffer(fullUrl, {
+    type: 'png',
+    margin: 1,
+  });
+
   return qrBuffer;
 };
 
