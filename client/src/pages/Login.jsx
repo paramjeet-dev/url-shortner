@@ -13,7 +13,8 @@ const Login = () => {
     try {
       const res = await loginUser(data);
       login(res.data.user);
-      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('token', res.data.accessToken);
+      localStorage.setItem('refresh_token', res.data.refreshToken);
       toast.success('Logged in!');
       navigate('/dashboard');
     } catch (err) {

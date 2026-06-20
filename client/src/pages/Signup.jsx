@@ -13,7 +13,8 @@ const Signup = () => {
     try {
       const res = await signupUser(data);
       login(res.data.user);
-      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('token', res.data.accessToken);
+      localStorage.setItem('refresh_token', res.data.refreshToken);
       toast.success('Account created!');
       navigate('/dashboard');
     } catch (err) {

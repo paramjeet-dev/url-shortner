@@ -2,13 +2,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { LogOut, User } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { logoutUser } from '../services/api';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refresh_token');
+      await logoutUser({ refreshToken });
+    } catch (_) { }
+    localStorage.clear();
     toast.success('Logged out');
     navigate('/');
   };
