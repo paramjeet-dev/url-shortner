@@ -12,7 +12,7 @@ exports.createShortUrl = async (req, res, next) => {
       });
     }
 
-    const result = await urlService.createShortUrl(originalUrl, expiresInDays || 30, customAlias);
+    const result = await urlService.createShortUrl(originalUrl, expiresInDays || 30, customAlias,req.user._id);
     res.status(201).json({
       success: true,
       ...result
@@ -64,6 +64,28 @@ exports.getAnalytics = async (req, res, next) => {
       ...analytics
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+exports.getUserUrls = async (req, res, next) => {
+  try {
+    const urls = await urlService.getUserUrls(req.user._id);
+    res.json({ success: true, urls });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteUrl = async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    await urlService.deleteUrl(code, req.user._id);
+    res.json({ success: true, message: 'Link deleted' });
+  } catch (error) {
+    if (error.message.includes('not found') || error.message.includes('permission')) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
     next(error);
   }
 };

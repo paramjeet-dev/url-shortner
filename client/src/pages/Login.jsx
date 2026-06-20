@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
+import { loginUser } from '../services/api';
 
 const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -10,16 +11,13 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Mock login – replace with real API call
-      // const res = await loginUser(data);
-      // login(res.data.user);
-      // For demo, we accept any email/password
-      const mockUser = { name: 'Test User', email: data.email };
-      login(mockUser);
-      toast.success('Logged in successfully!');
+      const res = await loginUser(data);
+      login(res.data.user);
+      localStorage.setItem('token', res.data.token);
+      toast.success('Logged in!');
       navigate('/dashboard');
     } catch (err) {
-      toast.error('Login failed. Please try again.');
+      toast.error(err.response?.data?.message || 'Login failed');
     }
   };
 
@@ -33,9 +31,8 @@ const Login = () => {
             type="email"
             placeholder="xyz@example.com"
             {...register('email', { required: 'Email is required' })}
-            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${errors.email ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
         </div>
@@ -45,9 +42,8 @@ const Login = () => {
             type="password"
             placeholder="********"
             {...register('password', { required: 'Password is required' })}
-            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
-              errors.password ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${errors.password ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
         </div>

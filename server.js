@@ -6,6 +6,7 @@ const redisClient = require('./src/config/redis');
 const urlRoutes = require('./src/routes/urlRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 const healthRoutes = require('./src/routes/healthRoutes');
+const authRoutes = require('./src/routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ app.use(morgan('combined'));
 // Routes
 app.use('/', urlRoutes);
 app.use('/', healthRoutes);
+app.use('/api/auth', authRoutes);
 
 // Error handler
 app.use(errorHandler);

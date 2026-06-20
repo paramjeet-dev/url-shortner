@@ -2,7 +2,7 @@ const Url = require('../models/Url');
 const { generateUniqueCode, isAliasAvailable, validateAlias } = require('../utils/shortCode');
 const redisClient = require('../config/redis');
 
-const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = null) => {
+const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = null,userId) => {
   let shortCode;
 
   if (customAlias) {
@@ -24,7 +24,8 @@ const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = nul
   const urlDoc = new Url({
     originalUrl,
     shortCode,
-    expiresAt
+    expiresAt,
+    userId
   });
 
   await urlDoc.save();
@@ -41,6 +42,20 @@ const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = nul
     shortUrl: `${process.env.BASE_URL}/${shortCode}`,
     expiresAt
   };
+};
+
+const getUserUrls = async (userId) => {
+  return await Url.find({ userId }).sort({ createdAt: -1 });
+};
+
+const deleteUrl = async (shortCode, userId) => {
+  const result = await Url.findOneAndDelete({ shortCode, userId });
+  if (!result) {
+    throw new Error('Link not found or you do not have permission');
+  }
+  // Also delete from cache
+  await redisClient.del(`shorturl:${shortCode}`).catch(() => {});
+  return result;
 };
 
 const getOriginalUrl = async (shortCode) => {
@@ -139,6 +154,8 @@ const getAnalytics = async (shortCode) => {
 
 module.exports = {
   createShortUrl,
+  getUserUrls,
+  deleteUrl,
   getOriginalUrl,
   recordClick,
   getAnalytics

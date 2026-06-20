@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
+import { signupUser } from '../services/api';
 
 const Signup = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -10,13 +11,13 @@ const Signup = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Mock signup – replace with real API call
-      const mockUser = { name: data.name, email: data.email };
-      login(mockUser);
+      const res = await signupUser(data);
+      login(res.data.user);
+      localStorage.setItem('token', res.data.token);
       toast.success('Account created!');
       navigate('/dashboard');
     } catch (err) {
-      toast.error('Signup failed. Please try again.');
+      toast.error(err.response?.data?.message || 'Signup failed');
     }
   };
 
@@ -30,9 +31,8 @@ const Signup = () => {
             type="text"
             placeholder="John Doe"
             {...register('name', { required: 'Name is required' })}
-            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
-              errors.name ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${errors.name ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
         </div>
@@ -42,9 +42,8 @@ const Signup = () => {
             type="email"
             placeholder="xyz@example.com"
             {...register('email', { required: 'Email is required' })}
-            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${errors.email ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
         </div>
@@ -54,9 +53,8 @@ const Signup = () => {
             type="password"
             placeholder="********"
             {...register('password', { required: 'Password is required', minLength: 6 })}
-            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
-              errors.password ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${errors.password ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.password && (
             <p className="text-red-500 text-sm mt-1">
