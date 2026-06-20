@@ -7,6 +7,7 @@ const urlRoutes = require('./src/routes/urlRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 const healthRoutes = require('./src/routes/healthRoutes');
 const authRoutes = require('./src/routes/authRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,7 @@ app.use(morgan('combined'));
 app.use('/', urlRoutes);
 app.use('/', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handler
 app.use(errorHandler);

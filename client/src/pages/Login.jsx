@@ -12,7 +12,10 @@ const Login = () => {
   const onSubmit = async (data) => {
     try {
       const res = await loginUser(data);
-      login(res.data.user);
+      login(res.data.user, {
+        accessToken: res.data.accessToken,
+        refreshToken: res.data.refreshToken,
+      });
       localStorage.setItem('token', res.data.accessToken);
       localStorage.setItem('refresh_token', res.data.refreshToken);
       toast.success('Logged in!');

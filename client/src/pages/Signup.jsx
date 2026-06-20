@@ -12,7 +12,10 @@ const Signup = () => {
   const onSubmit = async (data) => {
     try {
       const res = await signupUser(data);
-      login(res.data.user);
+      login(res.data.user, {
+        accessToken: res.data.accessToken,
+        refreshToken: res.data.refreshToken,
+      });
       localStorage.setItem('token', res.data.accessToken);
       localStorage.setItem('refresh_token', res.data.refreshToken);
       toast.success('Account created!');

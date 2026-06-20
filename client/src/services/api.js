@@ -82,4 +82,11 @@ export const getQRCode = (code) =>
   api.get(`/urls/${code}/qr`, {
     responseType: 'blob',
   });
+
+export const getAdminStats = () => api.get('/admin/stats');
+export const getAdminUsers = () => api.get('/admin/users');
+export const promoteUser = (userId) => api.put(`/admin/users/${userId}/promote`);
+export const getAdminLinks = (params) => api.get('/admin/links', { params });
+export const deleteAdminLink = (code) => api.delete(`/admin/links/${code}`);
+
 export default api;
