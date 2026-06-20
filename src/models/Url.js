@@ -8,6 +8,11 @@ const clickEventSchema = new mongoose.Schema({
 });
 
 const urlSchema = new mongoose.Schema({
+  title: {
+  type: String,
+  trim: true,
+  default: '',
+},
   originalUrl: {
     type: String,
     required: true,
@@ -43,5 +48,9 @@ const urlSchema = new mongoose.Schema({
 
 // TTL index: automatically remove documents after expiresAt
 urlSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+// dynamically check if the URL is expired
+urlSchema.virtual('isExpired').get(function() {
+  return this.expiresAt < new Date();
+});
 
 module.exports = mongoose.model('Url', urlSchema);

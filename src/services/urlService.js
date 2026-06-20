@@ -44,8 +44,24 @@ const createShortUrl = async (originalUrl, expiresInDays = 30, customAlias = nul
   };
 };
 
-const getUserUrls = async (userId) => {
-  return await Url.find({ userId }).sort({ createdAt: -1 });
+const updateUrlTitle = async (shortCode, userId, title) => {
+  const url = await Url.findOne({ shortCode, userId });
+  if (!url) {
+    throw new Error('Link not found or you do not have permission');
+  }
+  url.title = title;
+  await url.save();
+  return url;
+};
+
+const getUserUrls = async (userId, page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+  const [urls, total] = await Promise.all([
+    Url.find({ userId }).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    Url.countDocuments({ userId }),
+  ]);
+  // Add virtuals manually if needed
+  return { urls, total, page, totalPages: Math.ceil(total / limit) };
 };
 
 const deleteUrl = async (shortCode, userId) => {
@@ -152,11 +168,27 @@ const getAnalytics = async (shortCode) => {
   };
 };
 
+const extendExpiry = async (shortCode, userId, days) => {
+  const url = await Url.findOne({ shortCode, userId });
+  if (!url) {
+    throw new Error('Link not found or you do not have permission');
+  }
+  const newExpiry = new Date(url.expiresAt);
+  newExpiry.setDate(newExpiry.getDate() + days);
+  url.expiresAt = newExpiry;
+  await url.save();
+  // Update cache TTL
+  await redisClient.setEx(`shorturl:${shortCode}`, days * 24 * 60 * 60, url.originalUrl).catch(() => {});
+  return url;
+};
+
 module.exports = {
   createShortUrl,
+  updateTitle,
   getUserUrls,
   deleteUrl,
   getOriginalUrl,
   recordClick,
-  getAnalytics
+  getAnalytics,
+  extendExpiry
 };

@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
 import LinkItem from './LinkItem';
 
-const LinkList = ({ links, selectedCode, onSelect, searchTerm, onSearchChange }) => {
+const LinkList = ({ links, selectedCode, onSelect, searchTerm, onSearchChange, page, totalPages, onPageChange }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
       <div className="flex items-center justify-between mb-4">
@@ -30,6 +30,23 @@ const LinkList = ({ links, selectedCode, onSelect, searchTerm, onSearchChange })
             />
           ))
         )}
+      </div>
+      <div className="flex items-center justify-between mt-4">
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className="p-1 text-gray-500 disabled:opacity-50"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <span className="text-sm text-gray-500">Page {page} of {totalPages}</span>
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className="p-1 text-gray-500 disabled:opacity-50"
+        >
+          <ChevronRight size={18} />
+        </button>
       </div>
     </div>
   );

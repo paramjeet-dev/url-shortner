@@ -68,10 +68,26 @@ exports.getAnalytics = async (req, res, next) => {
   }
 };
 
+exports.updateTitle = async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const { title } = req.body;
+    const url = await urlService.updateUrlTitle(code, req.user._id, title);
+    res.json({ success: true, url });
+  } catch (error) {
+    if (error.message.includes('not found') || error.message.includes('permission')) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    next(error);
+  }
+};
+
 exports.getUserUrls = async (req, res, next) => {
   try {
-    const urls = await urlService.getUserUrls(req.user._id);
-    res.json({ success: true, urls });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const result = await urlService.getUserUrls(req.user._id, page, limit);
+    res.json({ success: true, ...result });
   } catch (error) {
     next(error);
   }
@@ -82,6 +98,20 @@ exports.deleteUrl = async (req, res, next) => {
     const { code } = req.params;
     await urlService.deleteUrl(code, req.user._id);
     res.json({ success: true, message: 'Link deleted' });
+  } catch (error) {
+    if (error.message.includes('not found') || error.message.includes('permission')) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    next(error);
+  }
+};
+
+exports.extendExpiry = async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const { days } = req.body;
+    const url = await urlService.extendExpiry(code, req.user._id, days);
+    res.json({ success: true, url });
   } catch (error) {
     if (error.message.includes('not found') || error.message.includes('permission')) {
       return res.status(404).json({ success: false, message: error.message });

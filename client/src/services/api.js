@@ -19,5 +19,7 @@ export const loginUser = (credentials) => api.post('/auth/login', credentials);
 export const signupUser = (userData) => api.post('/auth/signup', userData);
 export const getUserLinks = () => api.get('/urls'); // expects array of user's links
 export const deleteLink = (code) => api.delete(`/urls/${code}`);
+export const updateLinkTitle = (code, title) => api.put(`/urls/${code}/title`, { title });
+export const extendLinkExpiry = (code, days) => api.post(`/urls/${code}/extend`, { days });
 
 export default api;
