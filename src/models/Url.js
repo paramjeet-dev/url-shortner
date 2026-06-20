@@ -24,6 +24,10 @@ const urlSchema = new mongoose.Schema({
     unique: true,
     index: true
   },
+  password: {
+    type: String,
+    select: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

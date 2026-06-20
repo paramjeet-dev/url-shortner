@@ -4,19 +4,20 @@ const { addClickJob } = require('../queues/clickQueue');
 
 exports.createShortUrl = async (req, res, next) => {
   try {
-    const { originalUrl, expiresInDays, customAlias } = req.body;
+    const { originalUrl, expiresInDays, customAlias, password, customDomain } = req.body;
     if (!originalUrl || !isValidUrl(originalUrl)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid URL provided'
-      });
+      return res.status(400).json({ success: false, message: 'Invalid URL provided' });
     }
 
-    const result = await urlService.createShortUrl(originalUrl, expiresInDays || 30, customAlias,req.user._id);
-    res.status(201).json({
-      success: true,
-      ...result
-    });
+    const result = await urlService.createShortUrl(
+      originalUrl,
+      expiresInDays || 30,
+      customAlias,
+      req.user._id,
+      password,
+      customDomain
+    );
+    res.status(201).json({ success: true, ...result });
   } catch (error) {
     // Distinguish custom alias errors
     if (error.message.includes('alias')) {
@@ -116,6 +117,31 @@ exports.extendExpiry = async (req, res, next) => {
     if (error.message.includes('not found') || error.message.includes('permission')) {
       return res.status(404).json({ success: false, message: error.message });
     }
+    next(error);
+  }
+};
+
+exports.verifyPassword = async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const { password } = req.body;
+    const host = req.get('host');
+    const token = await urlService.verifyPassword(code, password, host);
+    res.json({ success: true, token });
+  } catch (error) {
+    const status = error.message.includes('not found') ? 404 : 403;
+    res.status(status).json({ success: false, message: error.message });
+  }
+};
+
+exports.generateQR = async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const host = req.get('host');
+    const qrBuffer = await urlService.generateQRCode(code, host);
+    res.set('Content-Type', 'image/png');
+    res.send(qrBuffer);
+  } catch (error) {
     next(error);
   }
 };

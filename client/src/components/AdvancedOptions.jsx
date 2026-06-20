@@ -41,6 +41,16 @@ const AdvancedOptions = ({ register, watch }) => {
               <option value="365">1 year</option>
             </select>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password (optional)</label>
+            <input
+              type="password"
+              placeholder="Set a password for this link"
+              {...register('password')}
+              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <p className="text-xs text-gray-400 mt-1">Users will need this password to access the link.</p>
+          </div>
         </div>
       )}
     </div>
