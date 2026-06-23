@@ -1,5 +1,6 @@
 const rateLimit = require('express-rate-limit');
-const RedisStore = require('rate-limit-redis');
+const { ipKeyGenerator } = require('express-rate-limit');
+const { RedisStore } = require('rate-limit-redis');
 const redisClient = require('../config/redis');
 
 const createLimiter = (windowMs = 60 * 1000, max = 100) => {
@@ -7,9 +8,10 @@ const createLimiter = (windowMs = 60 * 1000, max = 100) => {
     windowMs,
     max,
     store: new RedisStore({
-      client: redisClient,
+      sendCommand: (...args) => redisClient.sendCommand(args),
     }),
-    keyGenerator: (req) => req.user?._id?.toString() || req.ip,
+    keyGenerator: (req) =>
+      req.user?._id?.toString() || ipKeyGenerator(req),
     handler: (req, res) => {
       res.status(429).json({
         success: false,

@@ -240,7 +240,7 @@ const extendExpiry = async (shortCode, userId, days) => {
 
 module.exports = {
   createShortUrl,
-  updateTitle,
+  updateUrlTitle,
   getUserUrls,
   deleteUrl,
   getOriginalUrl,

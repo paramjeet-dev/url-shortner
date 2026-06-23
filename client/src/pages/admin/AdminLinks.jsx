@@ -99,3 +99,5 @@ const AdminLinks = () => {
     </div>
   );
 };
+
+export default AdminLinks;

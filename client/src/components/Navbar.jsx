@@ -50,7 +50,6 @@ const Navbar = () => {
               Login
             </Link>
           )}
-          // In Navbar.jsx
           {user && user.isAdmin && (
             <Link to="/admin" className="text-gray-700 hover:text-blue-600 font-medium">
               Admin

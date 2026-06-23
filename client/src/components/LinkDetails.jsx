@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Eye, Edit, Trash2, Link as LinkIcon, Clock, Check, X, QRCode } from 'lucide-react';
+import { Calendar, Eye, Edit, Trash2, Link as LinkIcon, Clock, Check, X, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { updateLinkTitle, extendLinkExpiry } from '../services/api';
 import QRModal from './QRModal';
